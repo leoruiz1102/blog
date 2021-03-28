@@ -56,3 +56,19 @@
     color: var(--pink-500)
   }
 }
+
+.postNavigation {
+  display: flex;
+  justify-content: space-between;
+  margin: 3rem 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--gray-500);
+
+  color: var(--gray-100);
+
+  div {
+    a {
+      color: var(--pink-500);
+    }
+  }
+}

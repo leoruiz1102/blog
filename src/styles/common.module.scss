@@ -2,6 +2,21 @@
   max-width: 720px;
   margin: 0 auto;
   padding: 5.25rem 2rem;
+
+  aside {
+    margin-top: 3rem;
+  }
 }
 
-
+.previewButton {
+  width: 720px;
+  height: 3rem;
+  background: var(--pink-500);
+  border: 0;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border-radius: 10px;
+}

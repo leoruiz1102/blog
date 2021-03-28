@@ -13,13 +13,15 @@ import { useRouter } from 'next/router';
 import { ptBR } from 'date-fns/locale';
 import Head from 'next/head';
 import { format } from 'date-fns';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import Header from '../../components/Header';
 
 import { getPrismicClient } from '../../services/prismic';
 
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
+import { Utteranc } from '../../components/Utteranc';
 
 interface Post {
   first_publication_date: string | null;
@@ -40,9 +42,10 @@ interface Post {
 
 interface PostProps {
   post: Post;
+  preview: boolean;
 }
 
-export default function Post({ post }: PostProps): JSX.Element {
+export default function Post({ post, preview }: PostProps): JSX.Element {
   const router = useRouter();
 
   if (router.isFallback) {
@@ -111,6 +114,28 @@ export default function Post({ post }: PostProps): JSX.Element {
             ))}
           </div>
         </section>
+        <section className={styles.postNavigation}>
+          <div>
+            <p>Nome do Post</p>
+            <Link href="/">
+              <a>Post anterior</a>
+            </Link>
+          </div>
+          <div>
+            <p>Nome do Post</p>
+            <Link href="/asdasd">
+              <a>Próximo post</a>
+            </Link>
+          </div>
+        </section>
+        <Utteranc />
+        {preview && (
+          <aside>
+            <Link href="/api/exit-preview">
+              <a className={commonStyles.previewButton}>Sair do modo Preview</a>
+            </Link>
+          </aside>
+        )}
       </main>
     </>
   );
@@ -136,15 +161,34 @@ export const getStaticPaths: GetStaticPaths = async () => {
   };
 };
 
-export const getStaticProps: GetStaticProps = async context => {
-  const { slug } = context.params;
+export const getStaticProps: GetStaticProps = async ({
+  params,
+  preview = false,
+  previewData,
+}) => {
+  const { slug } = params;
   const prismic = getPrismicClient();
 
-  const response = await prismic.getByUID('post', String(slug), {});
+  const response = await prismic.getByUID('post', String(slug), {
+    ref: previewData?.ref ?? null,
+  });
 
+  const prevpost = await prismic.query(
+    Prismic.predicates.at('document.type', 'post'),
+    {
+      pageSize: 1,
+      after: `${response.id}`,
+      orderings: '[my.post.first_publication_date]',
+    }
+  );
+
+  console.log('Prev', prevpost);
   const post = {
     uid: response.uid,
     first_publication_date: response.first_publication_date,
+    last_update_date: response.last_publication_date,
+    // next_page: pagination.next_page,
+    // prev_pag: pagination.prev_page,
     data: {
       title: response.data.title,
       subtitle: response.data.subtitle,
@@ -163,7 +207,8 @@ export const getStaticProps: GetStaticProps = async context => {
   return {
     props: {
       post,
+      preview,
     },
-    revalidate: 60 * 30, // 30 minutos
+    revalidate: 60 * 30, // 30 minutos,
   };
 };
